@@ -7,7 +7,6 @@ import { serviceClient, sessionClient } from "@/lib/supabase";
 import { slugify } from "@/lib/format";
 import { logActivity } from "@/lib/activity";
 import { emailStoryPublished } from "@/lib/email";
-import { SITE } from "@/lib/constants";
 
 // Every action re-checks who's signed in. Preview mode is read-only.
 async function admin(): Promise<AdminUser> {
@@ -162,15 +161,16 @@ export async function inviteMember(formData: FormData) {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) redirect(`/admin/team?error=${encodeURIComponent("Enter a valid email")}`);
 
   const sb = serviceClient();
+  // Create their account (already confirmed) so they can sign in at /admin/login
+  // with a one-time email link. If they already have an account, look it up.
   let userId: string | null = null;
-  const invited = await sb.auth.admin.inviteUserByEmail(email, { redirectTo: `${SITE.url}/auth/confirm` });
-  if (invited.data?.user) userId = invited.data.user.id;
+  const created = await sb.auth.admin.createUser({ email, email_confirm: true });
+  if (created.data?.user) userId = created.data.user.id;
   else {
-    // Already has an account: look them up.
     const { data } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
     userId = data?.users.find((u) => u.email?.toLowerCase() === email)?.id ?? null;
   }
-  if (!userId) redirect(`/admin/team?error=${encodeURIComponent(invited.error?.message ?? "Couldn't invite that address")}`);
+  if (!userId) redirect(`/admin/team?error=${encodeURIComponent(created.error?.message ?? "Couldn't add that address")}`);
 
   const { error } = await sb.from("admins").upsert({ user_id: userId, email, role, display_name: name });
   if (error) redirect(`/admin/team?error=${encodeURIComponent(error.message)}`);
