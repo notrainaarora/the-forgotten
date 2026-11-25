@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description:
     "A youth-led storytelling initiative sharing the stories of veterans experiencing homelessness, seniors, and others too often reduced to statistics.",
   openGraph: { siteName: SITE.name, type: "website" },
+  // Hidden from search engines until launch day (SITE_PRELAUNCH=1 in Vercel).
+  robots: process.env.SITE_PRELAUNCH === "1" ? { index: false, follow: false } : undefined,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
