@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { isConfigured, sessionClient } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+import { isConfigured } from "@/lib/supabase";
 import { getAdmin } from "@/lib/admin";
 import { LogoMark } from "@/components/Logo";
 
@@ -13,9 +14,12 @@ async function sendLink(formData: FormData) {
   if (!email || !isConfigured) redirect("/admin/login?sent=1");
   const h = await headers();
   const origin = process.env.NEXT_PUBLIC_SITE_URL || `https://${h.get("host")}`;
-  const supabase = await sessionClient();
-  // shouldCreateUser:false → only people already invited in Supabase can sign in.
-  await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: `${origin}/auth/callback` } });
+  // Implicit flow: the emailed link carries the session itself, so it works in any
+  // browser (see /auth/finish). shouldCreateUser:false → only team members can sign in.
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    auth: { flowType: "implicit", persistSession: false, autoRefreshToken: false },
+  });
+  await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: `${origin}/auth/finish` } });
   // Same message whether or not the address is an admin, so we don't reveal who is.
   redirect("/admin/login?sent=1");
 }
