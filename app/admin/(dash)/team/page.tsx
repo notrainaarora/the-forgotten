@@ -17,7 +17,7 @@ export default async function Team({ searchParams }: { searchParams: SP }) {
           <p>Who can sign in to this dashboard.</p>
         </div>
       </div>
-      {sp.saved && <div className="notice notice-ok">{sp.saved === "invited" ? "Invitation sent. They'll get an email with a sign-in link." : "Saved."}</div>}
+      {sp.saved && <div className="notice notice-ok">{sp.saved === "invited" ? "Added. Tell them to go to /admin/login on the site and enter their email to get a sign-in link." : "Saved."}</div>}
       {sp.error && <div className="notice notice-err">{sp.error}</div>}
 
       <div className="cards-2">
@@ -55,7 +55,7 @@ export default async function Team({ searchParams }: { searchParams: SP }) {
                 <option value="owner">Owner: everything, including contacts and the team</option>
               </select>
             </div>
-            <button className="btn btn-primary btn-small">Send invitation</button>
+            <button className="btn btn-primary btn-small">Add to team</button>
           </form>
           <p className="muted" style={{ fontSize: 13, marginBottom: 0 }}>
             Reviewers can&rsquo;t see the sign-up list, download data, delete stories, or manage the team.
